@@ -1,0 +1,13 @@
+﻿# Виртуальное окружение
+myenv/
+
+# Логи
+logs/
+
+# Конфиденциальные данные
+config/config.yaml
+
+# Системные файлы
+*.pyc
+__pycache__/
+.ipynb_checkpoints/
