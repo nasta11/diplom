@@ -12,7 +12,7 @@ def get_prediction_from_model(text: str) -> float:
 
 # Функция для обработки команды /start
 async def start(update: Update, context: CallbackContext) -> None:
-    await update.message.reply_text('Hello! I am your stock prediction bot. Send me a company name.')
+    await update.message.reply_text('Привет! Я ваш бот для предсказания акций. Отправьте мне название компании.')
 
 # Функция для обработки текстовых сообщений
 async def handle_message(update: Update, context: CallbackContext) -> None:
@@ -51,10 +51,17 @@ async def main() -> None:
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
+    # Запуск бота
     await application.initialize()
     await application.start()
     await application.updater.start_polling()
-    await application.stop()
+
+    # Ожидание завершения работы
+    try:
+        while True:
+            await asyncio.sleep(3600)  # Ожидание с интервалом в 1 час
+    except KeyboardInterrupt:
+        print("Bot stopped manually")
 
 if __name__ == "__main__":
     if sys.platform.startswith('win') and sys.version_info >= (3, 8):
@@ -63,9 +70,6 @@ if __name__ == "__main__":
 
     # Запуск основного цикла
     asyncio.run(main())
-
-
-
 
    
 
