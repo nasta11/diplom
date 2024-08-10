@@ -1,11 +1,37 @@
 import yaml
 import os
-from telegram import Update
-from telegram.ext import Application, CommandHandler, CallbackContext
 import asyncio
+from telegram import Update
+from telegram.ext import Application, CommandHandler, MessageHandler, CallbackContext, filters
 
+# Функция для получения предсказания от модели (пример)
+def get_prediction_from_model(text: str) -> float:
+    # Здесь должна быть логика получения предсказания от вашей модели
+    # В данном примере возвращаем случайное значение для демонстрации
+    import random
+    return random.uniform(0, 1)
+
+# Функция для обработки команды /start
 async def start(update: Update, context: CallbackContext) -> None:
-    await update.message.reply_text('Hello! I am your bot.')
+    await update.message.reply_text('Hello! I am your stock prediction bot. Send me a company name.')
+
+# Функция для обработки текстовых сообщений
+async def handle_message(update: Update, context: CallbackContext) -> None:
+    text = update.message.text
+
+    # Получение предсказания от модели
+    prediction = get_prediction_from_model(text)
+    
+    # Определение порогов для рекомендаций
+    if prediction > 0.6:
+        response = "Покупаем"
+    elif prediction < 0.4:
+        response = "Продаем"
+    else:
+        response = "Ждем"
+
+    # Отправка ответа пользователю
+    await update.message.reply_text(f'Предсказание: {prediction:.2f}\nРекомендация: {response}')
 
 async def main() -> None:
     config_path = 'config/config.yaml'
@@ -34,8 +60,9 @@ async def main() -> None:
     # Создание приложения
     application = Application.builder().token(TOKEN).build()
 
-    # Регистрация обработчиков команд
+    # Регистрация обработчиков команд и сообщений
     application.add_handler(CommandHandler("start", start))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     # Запуск бота
     await application.run_polling()
