@@ -2,8 +2,13 @@ import yaml
 import os
 import asyncio
 import sys
+import logging
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackContext, filters
+
+# Установка уровня логирования
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 # Функция для получения предсказания от модели (пример)
 def get_prediction_from_model(text: str) -> float:
@@ -43,7 +48,7 @@ async def main() -> None:
 
     with open(config_path, 'r', encoding='utf-8') as file:
         config = yaml.safe_load(file)
-        print("Loaded configuration:", config)
+        logger.info("Loaded configuration: %s", config)
 
     telegram_config = config.get('telegram', {})
     TOKEN = telegram_config.get('api_key')
@@ -51,18 +56,24 @@ async def main() -> None:
     if not TOKEN:
         raise KeyError("'api_key' key not found in 'telegram' section")
 
-    print(f"Token: {TOKEN}")
+    logger.info(f"Token: {TOKEN}")
 
     application = Application.builder().token(TOKEN).build()
 
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    await application.initialize()
-    await application.start()
-    print("Бот запущен...")
-    await application.updater.start_polling()
-    await application.stop()
+    try:
+        await application.initialize()
+        await application.start()
+        logger.info("Бот запущен...")
+        
+        # Запуск основного цикла
+        async with application:
+            await application.updater.start_polling()
+            await asyncio.Event().wait()
+    except Exception as e:
+        logger.error("An error occurred: %s", e)
 
 if __name__ == "__main__":
     if sys.platform.startswith('win') and sys.version_info >= (3, 8):
@@ -71,8 +82,6 @@ if __name__ == "__main__":
 
     # Запуск основного цикла
     asyncio.run(main())
-
- 
 
    
 
